@@ -21,12 +21,22 @@ func main() {
 
 	// Seed Data
 	fmt.Println("Seeding 10,000 users...")
+	
+	// Add specific users from requirements
+	specificUsers := map[string]int{
+		"rahul":        4600,
+		"rahul_burman": 3900,
+		"rahul_mathur": 3900,
+		"rahul_kumar":  1234,
+	}
+	
+	for name, score := range specificUsers {
+		lb.AddOrUpdateUser(name, score)
+		userList = append(userList, name)
+	}
+
 	for i := 1; i <= 10000; i++ {
 		username := fmt.Sprintf("user_%d", i)
-		if i == 1 { username = "rahul" } // Requirement example
-		if i == 2 { username = "rahul_burman" }
-		if i == 3 { username = "rahul_mathur" }
-		
 		rating := 100 + rand.Intn(4901) // 100 to 5000
 		lb.AddOrUpdateUser(username, rating)
 		userList = append(userList, username)
