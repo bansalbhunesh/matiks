@@ -1,91 +1,105 @@
-# Matiks Leaderboard System
+# 🏆 Matiks Leaderboard System
 
-A high-performance, real-time leaderboard system designed to handle millions of users with O(1) ranking complexity. Built for the Matiks Full-Stack Engineer Intern Assignment.
+A scalable, high-performance leaderboard system engineered to handle millions of users with **O(1)** ranking complexity. Developed for the Matiks Full-Stack Engineer Intern Assignment.
 
-![Leaderboard Demo](https://img.shields.io/badge/Status-Live-success) ![Go](https://img.shields.io/badge/Backend-Go-blue) ![React Native](https://img.shields.io/badge/Frontend-React%20Native-61dafb)
+🔗 **Live Demo**: [https://matiks-leaderboard-demo-123.netlify.app](https://matiks-leaderboard-demo-123.netlify.app)  
+*(Note: Requires the backend to be running locally via tunnel for the live demo to fetch data)*
 
-## 🚀 Features
+---
 
--   **Scalable Architecture**: Uses a Frequency Bucket algorithm to ensure `GetRank` and `UpdateScore` are always **O(1)** (constant time), regardless of user count (10k or 10M).
--   **Real-time Updates**: Background simulation updates random user scores every 200ms.
--   **Live Search**: Instant user lookup with real-time global rank calculation.
--   **Tie-Aware Ranking**: Users with the same score share the same rank (e.g., 1, 2, 2, 4).
--   **Premium UI**: Dark-themed, responsive React Native interface with gold/silver/bronze highlights.
--   **Seeded Data**: Automatically seeds 10,000 users on startup.
+## 🚀 Key Features
 
-## 🛠 Tech Stack
+-   **Constant Time Ranking**: Utilizes a **Frequency Bucket Algorithm** to ensure `GetRank` and `UpdateScore` operations remain $O(1)$, regardless of whether there are 10 thousand or 10 million users.
+-   **Tie-Aware Ranking**: Implements standard competition ranking (e.g., if two users match at Rank 1, the next user is Rank 3).
+-   **Real-Time Simulation**: A background worker simulates live gameplay by updating random user scores every 200ms.
+-   **Instant Search**: Search for any user by name to get their live global rank immediately.
+-   **Premium UX**: Built with React Native (Expo) featuring a responsive Dark Mode design and gold/silver/bronze rank highlights.
 
--   **Backend**: Go (Golang) 1.21+
--   **Frontend**: React Native (Expo)
--   **Deployment**: Netlify (Frontend), Self-hosted/Tunnel (Backend)
+---
 
-## 📂 Directory Structure
+## 🧪 Seeded Test Data
 
-```
-matiks/
-├── backend/           # Go Server
-│   ├── leaderboard/   # Core Ranking Logic (Service)
-│   ├── main.go        # HTTP Server & Simulation
-│   └── go.mod         # Dependencies
-└── frontend/          # React Native App
-    ├── src/           # Components & API
-    └── App.js         # Entry Point
-```
+Upon startup, the system automatically seeds **10,000 users**.
+We have explicitly included the following test cases to verify search and ranking logic:
 
-## ⚡ Getting Started
+| Username | Score | Expected Behavior |
+| :--- | :--- | :--- |
+| **matiks_admin** | `5000` | Should be **Rank #1** (Max Score) |
+| **rahul** | `4600` | High rank, useful for testing search |
+| **rahul_burman** | `3900` | Ties with `rahul_mathur` |
+| **rahul_mathur** | `3900` | Ties with `rahul_burman` (Same Rank) |
+| **rahul_kumar** | `1234` | Mid-tier rank |
 
-### Prerequisites
+*Plus 9,995 randomly generated users `user_1` to `user_10000`.*
 
--   [Go 1.21+](https://go.dev/dl/)
--   [Node.js](https://nodejs.org/) & npm
+---
 
-### 1️⃣ Run the Backend
+## 🛠 Technology Stack
 
-The backend runs on port `:8080`. It seeds data and starts the simulation immediately.
+### Backend (Go)
+-   **Language**: Go 1.21+
+-   **Architecture**: In-Memory Frequency Buckets (`[5001]int`) + Hash Map
+-   **Concurrency**: Mutex-protected reads/writes; Background Goroutines
+
+### Frontend (React Native)
+-   **Framework**: Expo (React Native)
+-   **Platform**: Web, Android, iOS
+-   **Styling**: Custom StyleSheet (Dark Theme)
+
+---
+
+## 🏎️ Performance & Algorithm
+
+### The "Frequency Bucket" Approach
+Storing millions of users in a sorted list requires $O(\log N)$ or $O(N)$ insertion time.
+Instead, given that scores are bounded between **100 and 5000**, we use a frequency array:
+
+1.  **Storage**: An array `Count[5001]` where `Count[s]` = number of users with score `s`.
+2.  **Get Rank**: To find the rank of score `S`, we sum `Count[i]` for all `i > S`.
+    -   Max iterations: 5000 (Constant).
+    -   Speed: < 1 microsecond.
+3.  **Tie Handling**: Implicit. If `Count[5000] == 2`, then anyone with score 4999 starts at Rank ($2+1$) = 3.
+
+---
+
+## 💻 Running Locally
+
+### 1. Backend Setup
+Navigate to the backend directory and run the server.
 
 ```bash
 cd backend
+go mod tidy
 go run main.go
 ```
+*Server runs on `http://localhost:8080`*
 
-Output:
-```
-Seeding 10,000 users...
-Seeding complete.
-Server starting on :8080
-```
-
-### 2️⃣ Run the Frontend
-
-You can run the frontend on Web, Android, or iOS.
+### 2. Frontend Setup
+Open a new terminal.
 
 ```bash
 cd frontend
 npm install
 npm start
 ```
+*Press `w` for Web, `a` for Android.*
 
--   Press **`w`** for Web.
--   Press **`a`** for Android Emulator.
--   Press **`i`** for iOS Simulator (Mac only).
+---
 
-> **Note**: If running on a physical device, ensure your phone and computer are on the same Wi-Fi and update `src/api/client.js` with your computer's local IP.
+## 🌐 Deployment Guide
 
-## 🧠 Core Algorithm: Frequency Buckets
+### Frontend
+Deployed via [Netlify](https://www.netlify.com/).
+-   Build command: `npx expo export -p web`
+-   Publish directory: `dist`
 
-Instead of sorting millions of users (which costs $O(N \log N)$), we use a **Frequency Array** of size 5001 (scores 0-5000).
+### Backend
+Currently hosted locally and exposed via **Localtunnel** for the demo.
+For production, deploy the Go binary to **Railway**, **Render**, or an **AWS EC2** instance.
 
--   **Memory**: Fixed small array (~20KB).
--   **Rank Calculation**: To find a rank for score $S$, we simply sum the counts of all buckets $> S$.
--   **Complexity**: $O(K)$ where $K$ is the score range (5000), which is constant. This makes looking up a rank **instant** even with 100 million users.
+---
 
-## 🧪 Verified Requirements
+## 👤 Author
 
--   [x] **10,000+ Users**: System handles 10k users in memory effortlessly.
--   [x] **Correct Ranks**: Validated tie-handling logic.
--   [x] **Random Updates**: Background goroutine simulates live activity.
--   [x] **Search**: Instant global rank lookup by username.
--   [x] **Responsiveness**: Smooth 60fps scrolling on the leaderboard.
-
-## 🔗 Live Demo
--   **Frontend**: [Netlify Link](https://matiks-leaderboard-demo-123.netlify.app) (Requires backend running locally)
+**Bhunesh Bansal**  
+*Full-Stack Engineer Applicant*

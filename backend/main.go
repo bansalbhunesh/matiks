@@ -28,6 +28,7 @@ func main() {
 		"rahul_burman": 3900,
 		"rahul_mathur": 3900,
 		"rahul_kumar":  1234,
+		"matiks_admin": 5000,
 	}
 	
 	for name, score := range specificUsers {
