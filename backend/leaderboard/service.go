@@ -1,7 +1,6 @@
 package leaderboard
 
 import (
-	"math/rand"
 	"strings"
 	"sync"
 )
